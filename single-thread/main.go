@@ -84,13 +84,11 @@ func main() {
 	check(e)
 
 	for _, char := range ordered {
-		fmt.Println("Char:", char, "Ocurrencies:", chars[char])
+		// fmt.Println("Char:", char, "Ocurrencies:", chars[char])
 
 		var text bytes.Buffer
 
-		for i := 0; i < chars[char]; i++ {
-			text.WriteString(char)
-		}
+		text.WriteString(strings.Repeat(char, chars[char]))
 
 		text.WriteTo(outFile)
 	}

@@ -104,6 +104,8 @@ func main() {
 		}
 	}
 
+	fmt.Println("Queued all work")
+
 	for _, in := range ins {
 		close(in)
 	}

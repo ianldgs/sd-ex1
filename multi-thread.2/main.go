@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -11,6 +12,8 @@ import (
 	"os"
 	"strconv"
 )
+
+//https://stackoverflow.com/questions/18267460/how-to-use-a-goroutine-pool
 
 func check(e error) {
 	if e != nil {
@@ -45,34 +48,28 @@ var (
 
 type CharCount struct {
 	char  string
-	count uint
+	count int
 }
 
-func countChar(char string, ch chan CharCount) {
+func countChar(char string, in chan string, out chan CharCount) {
 	var charCount = CharCount{
 		char:  char,
 		count: 0,
 	}
 
-	inFile, e := os.Open("./in.txt")
-
-	defer inFile.Close()
-
-	scanner := bufio.NewScanner(inFile)
-
-	check(e)
-
 	start := time.Now()
 
-	for scanner.Scan() {
-		line := strings.ToLower(scanner.Text())
+	for {
+		line, more := <-in
 
-		charCount.count += uint(strings.Count(line, char))
+		if !more {
+			fmt.Println("Processed char", char, "in", time.Since(start))
+			out <- charCount
+			return
+		}
+
+		charCount.count += strings.Count(line, char)
 	}
-
-	fmt.Println("Processed char", char, "in", time.Since(start))
-
-	ch <- charCount
 }
 
 //https://play.golang.org/p/coja1_w-fY
@@ -80,29 +77,66 @@ func countChar(char string, ch chan CharCount) {
 func main() {
 	readStart := time.Now()
 
-	ch := make(chan CharCount)
+	out := make(chan CharCount)
+	ins := make(map[string]chan string)
 
-	for _, c := range ordered {
-		go countChar(c, ch)
+	for _, char := range ordered {
+		ins[char] = make(chan string)
 
-		// break
+		go countChar(char, ins[char], out)
 	}
 
-	fmt.Println("Started all threads")
+	inFile, e := os.Open("./in.txt")
 
-	for i := range ordered {
-		fmt.Println("waiting", i)
+	check(e)
 
-		charCount := <-ch
+	defer inFile.Close()
+
+	scanner := bufio.NewReader(inFile)
+
+	fmt.Println("Started all routines")
+
+	for {
+		charr, _, err := scanner.ReadRune()
+
+		char := strings.ToLower(string(charr))
+
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				panic(err)
+			}
+		}
+
+		if _, ok := ins[char]; ok {
+			ins[char] <- char
+		}
+	}
+
+	fmt.Println("Queued all work", time.Since(readStart))
+
+	return
+
+	for {
+		_, more := <-out
+
+		if !more {
+			break
+		}
+	}
+
+	for range ordered {
+		charCount := <-out
 
 		fmt.Println("Char:", charCount.char, "Ocurrencies:", charCount.count)
-
-		// break
 	}
+
+	close(out)
 
 	fmt.Println("Read took", time.Since(readStart))
 
-	// return
+	return
 
 	writeStart := time.Now()
 	outFile, e := os.Create("./out.txt")
