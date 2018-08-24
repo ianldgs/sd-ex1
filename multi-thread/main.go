@@ -62,15 +62,25 @@ func countChar(char string, ch chan CharCount) {
 
 	check(e)
 
-	start := time.Now()
+	// start := time.Now()
 
 	for scanner.Scan() {
 		line := strings.ToLower(scanner.Text())
 
-		charCount.count += uint(strings.Count(line, char))
+		for _, c := range line {
+			_char := string(c)
+
+			if char != _char {
+				continue
+			}
+
+			charCount.count++
+		}
+
+		// charCount.count += uint(strings.Count(line, char))
 	}
 
-	fmt.Println("Processed char", char, "in", time.Since(start))
+	// fmt.Println("Processed char", char, "in", time.Since(start))
 
 	ch <- charCount
 }
@@ -90,12 +100,12 @@ func main() {
 
 	fmt.Println("Started all threads")
 
-	for i := range ordered {
-		fmt.Println("waiting", i)
+	for range ordered {
+		// fmt.Println("waiting", i)
 
-		charCount := <-ch
+		<-ch
 
-		fmt.Println("Char:", charCount.char, "Ocurrencies:", charCount.count)
+		// fmt.Println("Char:", charCount.char, "Ocurrencies:", charCount.count)
 
 		// break
 	}
@@ -118,7 +128,7 @@ func main() {
 	check(e)
 
 	for _, char := range ordered {
-		fmt.Println("Char:", char, "Ocurrencies:", chars[char])
+		// fmt.Println("Char:", char, "Ocurrencies:", chars[char])
 		for i := 0; i < chars[char]; i++ {
 			fmt.Fprintf(outFile, char)
 
