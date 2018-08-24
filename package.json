@@ -1,0 +1,26 @@
+{
+  "name": "sd-ex1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "single-thread": "node -r esm single-thread.js",
+    "multi-thread": "node -r esm multi-thread.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ianldgs/sd-ex1.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ianldgs/sd-ex1/issues"
+  },
+  "homepage": "https://github.com/ianldgs/sd-ex1#readme",
+  "devDependencies": {
+    "esm": "^3.0.79"
+  },
+  "dependencies": {
+    "webworker-threads": "^0.7.16"
+  }
+}
